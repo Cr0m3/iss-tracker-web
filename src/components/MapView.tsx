@@ -11,7 +11,12 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import type { ISSPosition, Location } from "@/lib/iss-api";
+import type {
+  ISSPosition,
+  Location,
+  SatellitePosition,
+  SatelliteCategory,
+} from "@/lib/iss-api";
 
 // --- Custom Icons ---
 
@@ -96,6 +101,55 @@ function ISSMarkerUpdater({
   return null;
 }
 
+// --- Satellites layer ---
+
+function SatellitesLayer({
+  satPositions,
+  satCategories,
+}: {
+  satPositions: Record<string, SatellitePosition[]>;
+  satCategories: Record<string, SatelliteCategory>;
+}) {
+  const map = useMap();
+  const groupRef = useRef<L.LayerGroup | null>(null);
+
+  useEffect(() => {
+    if (!groupRef.current) {
+      groupRef.current = L.layerGroup().addTo(map);
+    }
+    groupRef.current.clearLayers();
+
+    for (const [key, positions] of Object.entries(satPositions)) {
+      const color = satCategories[key]?.color ?? "#ffffff";
+      const icon = L.divIcon({
+        className: "",
+        html: `<div style="width:6px;height:6px;border-radius:50%;background:${color};opacity:0.85;"></div>`,
+        iconSize: [6, 6],
+        iconAnchor: [3, 3],
+      });
+      for (const pos of positions) {
+        L.marker([pos.lat, pos.lon], { icon })
+          .addTo(groupRef.current!)
+          .bindPopup(
+            `<div style="color:#0b0e17;font-family:monospace;font-size:12px">
+              <b>${pos.name}</b><br/>
+              Alt: ${pos.alt.toFixed(0)} km
+            </div>`
+          );
+      }
+    }
+  }, [satPositions, satCategories, map]);
+
+  useEffect(() => {
+    return () => {
+      groupRef.current?.remove();
+      groupRef.current = null;
+    };
+  }, []);
+
+  return null;
+}
+
 // --- Main Map Component ---
 
 interface MapViewProps {
@@ -104,6 +158,8 @@ interface MapViewProps {
   locations: Record<string, Location>;
   currentLoc: string;
   userLocation: Location | null;
+  satPositions: Record<string, SatellitePosition[]>;
+  satCategories: Record<string, SatelliteCategory>;
 }
 
 export default function MapView({
@@ -112,6 +168,8 @@ export default function MapView({
   locations,
   currentLoc,
   userLocation,
+  satPositions,
+  satCategories,
 }: MapViewProps) {
   const locationEntries = useMemo(
     () => Object.entries(locations),
@@ -135,6 +193,9 @@ export default function MapView({
 
       {/* ISS marker (managed imperatively for smooth updates) */}
       <ISSMarkerUpdater position={position} />
+
+      {/* Satellite layers */}
+      <SatellitesLayer satPositions={satPositions} satCategories={satCategories} />
 
       {/* Trail */}
       {trail.length > 1 && (
