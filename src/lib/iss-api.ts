@@ -1,3 +1,12 @@
+import {
+  twoline2satrec,
+  propagate,
+  gstime,
+  eciToGeodetic,
+  degreesLat,
+  degreesLong,
+} from "satellite.js";
+
 // --- Types ---
 
 export interface ISSPosition {
@@ -192,4 +201,87 @@ export async function fetchPasses(
   }
 
   return passes.slice(0, maxPasses);
+}
+
+// --- Satellite Categories (CelesTrak) ---
+
+export interface SatellitePosition {
+  name: string;
+  lat: number;
+  lon: number;
+  alt: number;
+}
+
+export interface SatelliteCategory {
+  label: string;
+  color: string;
+  url: string;
+}
+
+export const SAT_CATEGORIES: Record<string, SatelliteCategory> = {
+  stations: {
+    label: "Space Stations",
+    color: "#00e5a0",
+    url: "https://celestrak.org/pub/TLE/stations.txt",
+  },
+  weather: {
+    label: "Weather",
+    color: "#ffc800",
+    url: "https://celestrak.org/pub/TLE/weather.txt",
+  },
+  gps: {
+    label: "GPS",
+    color: "#00b8ff",
+    url: "https://celestrak.org/pub/TLE/gps-ops.txt",
+  },
+  starlink: {
+    label: "Starlink",
+    color: "#7F77DD",
+    url: "https://celestrak.org/pub/TLE/starlink.txt",
+  },
+};
+
+export async function fetchSatellitePositions(
+  category: SatelliteCategory,
+  limit = 200
+): Promise<SatellitePosition[]> {
+  const res = await fetch(category.url);
+  if (!res.ok) throw new Error(`TLE fetch: ${res.status}`);
+  const text = await res.text();
+
+  const lines = text
+    .trim()
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const now = new Date();
+  const results: SatellitePosition[] = [];
+
+  for (let i = 0; i + 2 < lines.length && results.length < limit; i += 3) {
+    const name = lines[i];
+    const tle1 = lines[i + 1];
+    const tle2 = lines[i + 2];
+
+    if (!tle1.startsWith("1 ") || !tle2.startsWith("2 ")) continue;
+
+    try {
+      const satrec = twoline2satrec(tle1, tle2);
+      const { position } = propagate(satrec, now);
+      if (!position || typeof position !== "object") continue;
+
+      const gmst = gstime(now);
+      const geo = eciToGeodetic(position, gmst);
+      const lat = degreesLat(geo.latitude);
+      const lon = degreesLong(geo.longitude);
+
+      if (!isFinite(lat) || !isFinite(lon)) continue;
+
+      results.push({ name: name.trim(), lat, lon, alt: geo.height });
+    } catch {
+      continue;
+    }
+  }
+
+  return results;
 }

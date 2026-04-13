@@ -8,9 +8,13 @@ import {
   ISSPass,
   Location,
   LOCATIONS,
+  SatellitePosition,
+  SatelliteCategory,
+  SAT_CATEGORIES,
   fetchISSPosition,
   fetchCrew,
   fetchPasses,
+  fetchSatellitePositions,
 } from "@/lib/iss-api";
 import styles from "./page.module.css";
 
@@ -31,6 +35,9 @@ export default function Home() {
   const [hoveredCrew, setHoveredCrew] = useState<{ member: CrewMember; y: number; color: string } | null>(null);
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "denied">("idle");
+  const [activeSatCats, setActiveSatCats] = useState<Set<string>>(new Set());
+  const [satPositions, setSatPositions] = useState<Record<string, SatellitePosition[]>>({});
+  const [satLoading, setSatLoading] = useState<Set<string>>(new Set());
 
   // Fetch ISS position every 5 seconds
   const updatePosition = useCallback(async () => {
@@ -79,6 +86,50 @@ export default function Home() {
       () => setGeoStatus("denied")
     );
   };
+
+  const toggleSatCat = useCallback((key: string) => {
+    setActiveSatCats((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+        setSatPositions((p) => {
+          const copy = { ...p };
+          delete copy[key];
+          return copy;
+        });
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }, []);
+
+  // Fetch + refresh satellite positions every 30s
+  useEffect(() => {
+    if (activeSatCats.size === 0) return;
+
+    const fetchAll = async () => {
+      for (const key of activeSatCats) {
+        setSatLoading((prev) => new Set(prev).add(key));
+        try {
+          const positions = await fetchSatellitePositions(SAT_CATEGORIES[key]);
+          setSatPositions((prev) => ({ ...prev, [key]: positions }));
+        } catch {
+          // keep existing positions on error
+        } finally {
+          setSatLoading((prev) => {
+            const next = new Set(prev);
+            next.delete(key);
+            return next;
+          });
+        }
+      }
+    };
+
+    fetchAll();
+    const interval = setInterval(fetchAll, 30_000);
+    return () => clearInterval(interval);
+  }, [activeSatCats]);
 
   // Position polling
   useEffect(() => {
@@ -165,6 +216,8 @@ export default function Home() {
           locations={LOCATIONS}
           currentLoc={currentLoc}
           userLocation={userLocation}
+          satPositions={satPositions}
+          satCategories={SAT_CATEGORIES}
         />
       </div>
 
@@ -295,6 +348,54 @@ export default function Home() {
                 );
               })
             )}
+          </div>
+        </div>
+
+        {/* Satellites */}
+        <div className={styles.panel}>
+          <h2 className={styles.panelTitle}>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
+            </svg>
+            Satellites
+            {activeSatCats.size > 0 && (
+              <span className={styles.crewCount}>
+                {Object.values(satPositions).reduce((s, a) => s + a.length, 0)}
+              </span>
+            )}
+          </h2>
+          <div className={styles.satList}>
+            {Object.entries(SAT_CATEGORIES).map(([key, cat]) => {
+              const active = activeSatCats.has(key);
+              const loading = satLoading.has(key);
+              return (
+                <label
+                  key={key}
+                  className={`${styles.satItem} ${active ? styles.satItemActive : ""}`}
+                >
+                  <div
+                    className={styles.satDot}
+                    style={{ background: cat.color }}
+                  />
+                  <span className={styles.satLabel}>{cat.label}</span>
+                  {loading && <span className={styles.satSpinner}>…</span>}
+                  <input
+                    type="checkbox"
+                    checked={active}
+                    onChange={() => toggleSatCat(key)}
+                    className={styles.satCheckbox}
+                  />
+                </label>
+              );
+            })}
           </div>
         </div>
 
