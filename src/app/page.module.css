@@ -1,0 +1,421 @@
+.dashboard {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* --- Top Bar --- */
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+
+.logo {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.logoAccent {
+  color: var(--accent);
+}
+
+.statusPill {
+  font-size: 11px;
+  font-family: "JetBrains Mono", monospace;
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.statusLive {
+  background: rgba(0, 229, 160, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(0, 229, 160, 0.2);
+}
+.statusLive .dot {
+  background: var(--accent);
+}
+
+.statusError {
+  background: rgba(255, 107, 107, 0.1);
+  color: var(--accent3);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+}
+.statusError .dot {
+  background: var(--accent3);
+}
+
+.statusConnecting {
+  background: rgba(136, 146, 168, 0.1);
+  color: var(--text2);
+  border: 1px solid rgba(136, 146, 168, 0.2);
+}
+.statusConnecting .dot {
+  background: var(--text2);
+}
+
+/* --- Map --- */
+.mapContainer {
+  grid-column: 1;
+  grid-row: 2;
+  position: relative;
+  min-height: 0;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+  grid-column: 2;
+  grid-row: 2 / 4;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  position: relative;
+  z-index: 400;
+}
+
+.panel {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panelTitle {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text2);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- Telemetry --- */
+.telemGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.telemItem {
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.telemLabel {
+  font-size: 10px;
+  color: var(--text2);
+  font-family: "JetBrains Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.telemValue {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.accent {
+  color: var(--accent);
+}
+.blue {
+  color: var(--accent2);
+}
+
+/* --- Crew --- */
+.crewList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.crewCount {
+  margin-left: auto;
+  background: rgba(0, 229, 160, 0.1);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+}
+
+.crewItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--bg3);
+  font-size: 13px;
+  position: relative;
+  cursor: default;
+  transition: background 0.15s;
+}
+
+.crewItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.crewAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.crewPhoto {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid;
+  flex-shrink: 0;
+}
+
+.crewName {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crewCraft {
+  font-size: 10px;
+  color: var(--text2);
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* --- Crew Tooltip (hover card) --- */
+.crewTooltip {
+  position: fixed;
+  right: 332px;
+  transform: translateY(-50%);
+  width: 280px;
+  background: var(--bg2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 14px;
+  z-index: 1000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.crewTooltip::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: var(--bg2);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltipHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tooltipPhoto {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(0, 229, 160, 0.3);
+  flex-shrink: 0;
+}
+
+.tooltipName {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.tooltipCountry {
+  font-size: 12px;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+}
+
+.tooltipGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.tooltipField {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.tooltipLabel {
+  color: var(--text2);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tooltipLinks {
+  display: flex;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tooltipLink {
+  font-size: 11px;
+  font-family: "JetBrains Mono", monospace;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: rgba(0, 184, 255, 0.1);
+  color: var(--accent2);
+  text-decoration: none;
+  border: 1px solid rgba(0, 184, 255, 0.2);
+  transition: background 0.15s;
+}
+
+.tooltipLink:hover {
+  background: rgba(0, 184, 255, 0.2);
+}
+
+/* --- Passes --- */
+.locTabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.locTab {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: "JetBrains Mono", monospace;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  transition: all 0.2s;
+}
+
+.locTab:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.locTabActive {
+  background: rgba(0, 229, 160, 0.1);
+  color: var(--accent);
+  border-color: rgba(0, 229, 160, 0.3);
+}
+
+.locTabGeo {
+  margin-left: auto;
+}
+
+.locTabGeo:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.passList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.passItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--bg3);
+  font-size: 12px;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.passTime {
+  color: var(--accent2);
+}
+
+.passDur {
+  color: var(--text2);
+}
+
+.placeholder {
+  color: var(--text2);
+  font-size: 12px;
+  font-family: "JetBrains Mono", monospace;
+  padding: 8px 10px;
+}
+
+/* --- Bottom Bar --- */
+.bottombar {
+  grid-column: 1;
+  padding: 10px 20px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-family: "JetBrains Mono", monospace;
+  color: var(--text2);
+}
+
+/* --- Responsive --- */
+@media (max-width: 800px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    grid-column: 1;
+    grid-row: 3;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+  .mapContainer {
+    min-height: 320px;
+  }
+  .bottombar {
+    display: none;
+  }
+}

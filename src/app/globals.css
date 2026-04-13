@@ -1,0 +1,85 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap");
+
+:root {
+  --bg: #0b0e17;
+  --bg2: #131828;
+  --bg3: #1a2035;
+  --accent: #00e5a0;
+  --accent2: #00b8ff;
+  --accent3: #ff6b6b;
+  --text: #e4e8f1;
+  --text2: #8892a8;
+  --border: rgba(255, 255, 255, 0.06);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: "DM Sans", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* Leaflet overrides */
+.leaflet-container {
+  background: var(--bg) !important;
+}
+
+.leaflet-tile-pane {
+  filter: saturate(0.3) brightness(0.65) contrast(1.1);
+}
+
+.leaflet-control-zoom a {
+  background: var(--bg2) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+.leaflet-control-attribution {
+  display: none !important;
+}
+
+/* ISS marker animation */
+.iss-icon {
+  animation: issPulse 3s infinite;
+}
+
+@keyframes issPulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(0, 229, 160, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgba(0, 229, 160, 0.9));
+  }
+}
+
+/* Status pill */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
