@@ -220,7 +220,7 @@ export default function Home() {
               </div>
             </div>
             <div className={styles.telemItem}>
-              <div className={styles.telemLabel}>Updated</div>
+              <div className={styles.telemLabel}>Last Fix (UTC)</div>
               <div className={styles.telemValue}>
                 {position ? formatTime(position.timestamp) : "--"}
               </div>
