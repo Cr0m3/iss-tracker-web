@@ -38,6 +38,7 @@ export default function Home() {
   const [activeSatCats, setActiveSatCats] = useState<Set<string>>(new Set());
   const [satPositions, setSatPositions] = useState<Record<string, SatellitePosition[]>>({});
   const [satLoading, setSatLoading] = useState<Set<string>>(new Set());
+  const [satErrors, setSatErrors] = useState<Record<string, string>>({});
 
   // Fetch ISS position every 5 seconds
   const updatePosition = useCallback(async () => {
@@ -97,6 +98,11 @@ export default function Home() {
           delete copy[key];
           return copy;
         });
+        setSatErrors((p) => {
+          const copy = { ...p };
+          delete copy[key];
+          return copy;
+        });
       } else {
         next.add(key);
       }
@@ -114,8 +120,12 @@ export default function Home() {
         try {
           const positions = await fetchSatellitePositions(SAT_CATEGORIES[key]);
           setSatPositions((prev) => ({ ...prev, [key]: positions }));
-        } catch {
-          // keep existing positions on error
+          setSatErrors((prev) => { const c = { ...prev }; delete c[key]; return c; });
+        } catch (err) {
+          setSatErrors((prev) => ({
+            ...prev,
+            [key]: err instanceof Error ? err.message : "fetch failed",
+          }));
         } finally {
           setSatLoading((prev) => {
             const next = new Set(prev);
@@ -387,6 +397,9 @@ export default function Home() {
                   />
                   <span className={styles.satLabel}>{cat.label}</span>
                   {loading && <span className={styles.satSpinner}>…</span>}
+                  {!loading && satErrors[key] && (
+                    <span className={styles.satError} title={satErrors[key]}>!</span>
+                  )}
                   <input
                     type="checkbox"
                     checked={active}
