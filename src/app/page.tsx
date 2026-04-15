@@ -119,9 +119,11 @@ export default function Home() {
         setSatLoading((prev) => new Set(prev).add(key));
         try {
           const positions = await fetchSatellitePositions(SAT_CATEGORIES[key]);
+          console.log(`[satellites] ${key}: ${positions.length} positions loaded`);
           setSatPositions((prev) => ({ ...prev, [key]: positions }));
           setSatErrors((prev) => { const c = { ...prev }; delete c[key]; return c; });
         } catch (err) {
+          console.error(`[satellites] ${key} fetch failed:`, err);
           setSatErrors((prev) => ({
             ...prev,
             [key]: err instanceof Error ? err.message : "fetch failed",
@@ -396,6 +398,9 @@ export default function Home() {
                     style={{ background: cat.color }}
                   />
                   <span className={styles.satLabel}>{cat.label}</span>
+                  {active && !loading && satPositions[key] && (
+                    <span className={styles.satCount}>{satPositions[key].length}</span>
+                  )}
                   {loading && <span className={styles.satSpinner}>…</span>}
                   {!loading && satErrors[key] && (
                     <span className={styles.satError} title={satErrors[key]}>!</span>
