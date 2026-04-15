@@ -283,5 +283,9 @@ export async function fetchSatellitePositions(
     }
   }
 
+  if (results.length === 0) {
+    throw new Error("No valid TLE records parsed — response may not be plain-text TLE format");
+  }
+
   return results;
 }
