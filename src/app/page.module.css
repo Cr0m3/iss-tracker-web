@@ -93,6 +93,7 @@
 
 .panel {
   padding: 18px 20px;
+  background: var(--bg3);
   border-bottom: 1px solid var(--border);
 }
 
@@ -352,6 +353,12 @@
 .satLabel {
   font-size: 12px;
   flex: 1;
+}
+
+.satCount {
+  font-size: 10px;
+  color: var(--text2);
+  font-family: "JetBrains Mono", monospace;
 }
 
 .satSpinner {
