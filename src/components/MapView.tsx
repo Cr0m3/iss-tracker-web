@@ -119,16 +119,19 @@ function SatellitesLayer({
     }
     groupRef.current.clearLayers();
 
+    const total = Object.values(satPositions).reduce((s, a) => s + a.length, 0);
+    console.log(`[SatellitesLayer] rendering ${total} satellites across ${Object.keys(satPositions).length} categories`);
+
     for (const [key, positions] of Object.entries(satPositions)) {
       const color = satCategories[key]?.color ?? "#ffffff";
-      const icon = L.divIcon({
-        className: "",
-        html: `<div style="width:6px;height:6px;border-radius:50%;background:${color};opacity:0.85;"></div>`,
-        iconSize: [6, 6],
-        iconAnchor: [3, 3],
-      });
       for (const pos of positions) {
-        L.marker([pos.lat, pos.lon], { icon })
+        L.circleMarker([pos.lat, pos.lon], {
+          radius: 3,
+          color,
+          fillColor: color,
+          fillOpacity: 0.85,
+          weight: 0,
+        })
           .addTo(groupRef.current!)
           .bindPopup(
             `<div style="color:#0b0e17;font-family:monospace;font-size:12px">
