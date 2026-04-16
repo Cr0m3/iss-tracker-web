@@ -247,13 +247,40 @@ export async function fetchSatellitePositions(
 ): Promise<SatellitePosition[]> {
   const res = await fetch(category.url);
   if (!res.ok) throw new Error(`TLE fetch: ${res.status}`);
-  const text = await res.text();
 
-  const lines = text
-    .trim()
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
+  // Stream the response and cancel early — Starlink.txt is ~1.3 MB but we
+  // only need the first `limit` satellites (~3 lines × limit ≈ 60 KB).
+  const lines: string[] = [];
+  if (res.body) {
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    // We need at most limit * 3 lines (name + 2 TLE lines). Collect
+    // 2× that as headroom for any malformed / skipped records.
+    const lineTarget = limit * 3 * 2;
+
+    outer: while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let nl: number;
+      while ((nl = buf.indexOf("\n")) !== -1) {
+        const line = buf.slice(0, nl).trim();
+        buf = buf.slice(nl + 1);
+        if (line) lines.push(line);
+        if (lines.length >= lineTarget) {
+          await reader.cancel();
+          break outer;
+        }
+      }
+    }
+    // Flush any remaining partial line
+    if (buf.trim()) lines.push(buf.trim());
+  } else {
+    // Fallback for environments without streaming body (e.g. Node test runner)
+    const text = await res.text();
+    lines.push(...text.trim().split("\n").map((l) => l.trim()).filter(Boolean));
+  }
 
   const now = new Date();
   const results: SatellitePosition[] = [];
