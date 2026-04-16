@@ -114,33 +114,42 @@ export default function Home() {
   useEffect(() => {
     if (activeSatCats.size === 0) return;
 
+    const controller = new AbortController();
+
     const fetchAll = async () => {
       for (const key of activeSatCats) {
+        if (controller.signal.aborted) break;
         setSatLoading((prev) => new Set(prev).add(key));
         try {
-          const positions = await fetchSatellitePositions(SAT_CATEGORIES[key]);
+          const positions = await fetchSatellitePositions(SAT_CATEGORIES[key], 200, controller.signal);
           console.log(`[satellites] ${key}: ${positions.length} positions loaded`);
           setSatPositions((prev) => ({ ...prev, [key]: positions }));
           setSatErrors((prev) => { const c = { ...prev }; delete c[key]; return c; });
         } catch (err) {
+          if (controller.signal.aborted) break;
           console.error(`[satellites] ${key} fetch failed:`, err);
           setSatErrors((prev) => ({
             ...prev,
             [key]: err instanceof Error ? err.message : "fetch failed",
           }));
         } finally {
-          setSatLoading((prev) => {
-            const next = new Set(prev);
-            next.delete(key);
-            return next;
-          });
+          if (!controller.signal.aborted) {
+            setSatLoading((prev) => {
+              const next = new Set(prev);
+              next.delete(key);
+              return next;
+            });
+          }
         }
       }
     };
 
     fetchAll();
     const interval = setInterval(fetchAll, 30_000);
-    return () => clearInterval(interval);
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
   }, [activeSatCats]);
 
   // Position polling
