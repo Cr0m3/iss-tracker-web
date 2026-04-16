@@ -101,6 +101,86 @@ function ISSMarkerUpdater({
   return null;
 }
 
+// --- Day/night terminator ---
+// Computes the solar terminator polygon using the standard low-precision
+// solar position algorithm (accuracy ~1°). No external dependency needed.
+
+function _julianDay(date: Date) {
+  return date.getTime() / 86400000 + 2440587.5;
+}
+
+function _terminatorLatLngs(date: Date): [number, number][] {
+  const jDay = _julianDay(date);
+  const n = jDay - 2451545;
+
+  // Sun's mean longitude + mean anomaly
+  const L = (280.46 + 0.9856474 * n) % 360;
+  const g = ((357.528 + 0.9856003 * n) % 360) * (Math.PI / 180);
+
+  // Ecliptic longitude → declination
+  const lambda = (L + 1.915 * Math.sin(g) + 0.02 * Math.sin(2 * g)) * (Math.PI / 180);
+  const epsilon = (23.439 - 0.0000004 * n) * (Math.PI / 180);
+  const delta = Math.asin(Math.sin(epsilon) * Math.sin(lambda));
+
+  // Greenwich hour angle (radians)
+  const GMST = ((18.697374558 + 24.06570982441908 * n) % 24 + 24) % 24;
+  const gw = (GMST / 24) * 2 * Math.PI;
+
+  // Sample the terminator great circle at 1° longitude steps
+  const pts: [number, number][] = [];
+  for (let lng = -180; lng <= 180; lng++) {
+    const lngRad = (lng * Math.PI) / 180;
+    const lngDiff = lngRad - gw;
+    const lat =
+      Math.abs(delta) < Math.PI / 2
+        ? Math.atan(-Math.cos(lngDiff) / Math.tan(delta))
+        : delta > 0
+        ? Math.PI / 2
+        : -Math.PI / 2;
+    pts.push([(lat * 180) / Math.PI, lng]);
+  }
+
+  // Close the polygon over the night pole
+  if (delta < 0) {
+    pts.push([90, 180], [90, -180]);
+  } else {
+    pts.push([-90, 180], [-90, -180]);
+  }
+  return pts;
+}
+
+function TerminatorLayer() {
+  const map = useMap();
+  const polyRef = useRef<L.Polygon | null>(null);
+
+  useEffect(() => {
+    const update = () => {
+      const latLngs = _terminatorLatLngs(new Date());
+      if (!polyRef.current) {
+        polyRef.current = L.polygon(latLngs as L.LatLngExpression[], {
+          stroke: false,
+          fillColor: "#000820",
+          fillOpacity: 0.35,
+          interactive: false,
+        }).addTo(map);
+      } else {
+        polyRef.current.setLatLngs(latLngs);
+        polyRef.current.redraw();
+      }
+    };
+
+    update();
+    const interval = setInterval(update, 60_000); // sun moves ~0.25°/min, 1 min is plenty
+    return () => {
+      clearInterval(interval);
+      polyRef.current?.remove();
+      polyRef.current = null;
+    };
+  }, [map]);
+
+  return null;
+}
+
 // --- Satellites layer ---
 
 function SatellitesLayer({
@@ -193,6 +273,9 @@ export default function MapView({
         maxZoom={19}
         subdomains={["a", "b", "c", "d"]}
       />
+
+      {/* Day/night terminator */}
+      <TerminatorLayer />
 
       {/* ISS marker (managed imperatively for smooth updates) */}
       <ISSMarkerUpdater position={position} />
