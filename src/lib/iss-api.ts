@@ -218,34 +218,41 @@ export interface SatelliteCategory {
   url: string;
 }
 
+// CelesTrak does not send Access-Control-Allow-Origin headers on its
+// /pub/TLE/ endpoints, so browser fetches are blocked. Route through
+// corsproxy.io which adds the missing CORS header transparently.
+const CORS = "https://corsproxy.io/?url=";
+const TLE = (file: string) => `${CORS}https://celestrak.org/pub/TLE/${file}`;
+
 export const SAT_CATEGORIES: Record<string, SatelliteCategory> = {
   stations: {
     label: "Space Stations",
     color: "#00e5a0",
-    url: "https://celestrak.org/pub/TLE/stations.txt",
+    url: TLE("stations.txt"),
   },
   weather: {
     label: "Weather",
     color: "#ffc800",
-    url: "https://celestrak.org/pub/TLE/weather.txt",
+    url: TLE("weather.txt"),
   },
   gps: {
     label: "GPS",
     color: "#00b8ff",
-    url: "https://celestrak.org/pub/TLE/gps-ops.txt",
+    url: TLE("gps-ops.txt"),
   },
   starlink: {
     label: "Starlink",
     color: "#7F77DD",
-    url: "https://celestrak.org/pub/TLE/starlink.txt",
+    url: TLE("starlink.txt"),
   },
 };
 
 export async function fetchSatellitePositions(
   category: SatelliteCategory,
-  limit = 200
+  limit = 200,
+  signal?: AbortSignal
 ): Promise<SatellitePosition[]> {
-  const res = await fetch(category.url);
+  const res = await fetch(category.url, { signal });
   if (!res.ok) throw new Error(`TLE fetch: ${res.status}`);
 
   // Stream the response and cancel early — Starlink.txt is ~1.3 MB but we
