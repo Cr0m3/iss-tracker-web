@@ -220,9 +220,9 @@ export interface SatelliteCategory {
 
 // CelesTrak does not send Access-Control-Allow-Origin headers on its
 // /pub/TLE/ endpoints, so browser fetches are blocked. Route through
-// corsproxy.io which adds the missing CORS header transparently.
-const CORS = "https://corsproxy.io/?url=";
-const TLE = (file: string) => `${CORS}https://celestrak.org/pub/TLE/${file}`;
+// allorigins.win which proxies the request and adds the missing header.
+const TLE = (file: string) =>
+  `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://celestrak.org/pub/TLE/${file}`)}`;
 
 export const SAT_CATEGORIES: Record<string, SatelliteCategory> = {
   stations: {
