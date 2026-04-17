@@ -33,7 +33,7 @@ body {
 }
 
 .leaflet-tile-pane {
-  filter: saturate(0.3) brightness(0.65) contrast(1.1);
+  filter: saturate(0.5) brightness(0.8) contrast(1.05);
 }
 
 .leaflet-control-zoom a {

@@ -48,7 +48,7 @@ export interface Location {
 
 export const LOCATIONS: Record<string, Location> = {
   melnik: { name: "Mělník, CZ", lat: 50.3505, lon: 14.4742 },
-  augsburg: { name: "Augsburg, DE", lat: 48.3665, lon: 10.8986 },
+  augsburg: { name: "Munich, DE", lat: 48.1351, lon: 11.5820 },
 };
 
 // --- API Fetchers ---
