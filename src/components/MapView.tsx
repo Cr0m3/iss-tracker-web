@@ -158,9 +158,12 @@ function TerminatorLayer() {
       const latLngs = _terminatorLatLngs(new Date());
       if (!polyRef.current) {
         polyRef.current = L.polygon(latLngs as L.LatLngExpression[], {
-          stroke: false,
-          fillColor: "#000820",
-          fillOpacity: 0.35,
+          stroke: true,
+          color: "#4477cc",
+          weight: 1.5,
+          opacity: 0.7,
+          fillColor: "#010a1e",
+          fillOpacity: 0.55,
           interactive: false,
         }).addTo(map);
       } else {
